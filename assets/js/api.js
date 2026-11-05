@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const mapImage = document.getElementById("map-image");
     const navBar = document.getElementById("nav-bar");
     const filterBar = document.getElementById("filter-bar");
+    const settingsBar = document.getElementById("settings-bar");
     const tooltip = document.getElementById("tooltip");
     const ttThumbnail = document.getElementById("tt-thumbnail");
     const ttTitle = document.getElementById("tt-title");
@@ -13,9 +14,11 @@ document.addEventListener("DOMContentLoaded", function() {
     let currentWorldIndex = 0;
     let currentFilter = 'field'; 
     let currentMapsList = [];
+    
+    // Estados das preferências do jogador
     let permanentThumbnails = false;
+    let showLevelsOnMap = false;
 
-    // Lista oficial rigorosa de cidades do Ragnarok
     const townList = [
         "prontera", "morocc", "geffen", "payon", "alberta", "izlude", "aldebaran",
         "xmas", "comodo", "yuno", "amatsu", "gonryun", "umbala", "niflheim",
@@ -31,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
             worldsData = data;
             buildNav();
             buildFilters();
+            buildSettings();
             if (worldsData.length > 0) {
                 loadWorld(0);
             }
@@ -71,44 +75,69 @@ document.addEventListener("DOMContentLoaded", function() {
             btn.className = "filter-btn" + (f.id === 'field' ? " active" : "");
             btn.textContent = f.label;
             btn.addEventListener("click", () => {
-                document.querySelectorAll(".filter-btn").forEach(b => {
-                    if(!b.classList.contains('toggle-thumb-btn')) b.classList.remove("active");
-                });
+                document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
                 currentFilter = f.id;
                 renderMapRegions();
             });
             filterBar.appendChild(btn);
         });
-
-        const toggleBtn = document.createElement("button");
-        toggleBtn.className = "filter-btn toggle-thumb-btn";
-        updateToggleButtonLabel(toggleBtn);
-        
-        toggleBtn.addEventListener("click", () => {
-            permanentThumbnails = !permanentThumbnails;
-            updateToggleButtonLabel(toggleBtn);
-            renderMapRegions();
-        });
-        filterBar.appendChild(toggleBtn);
     }
 
-    function updateToggleButtonLabel(btn) {
+    // Painel de Configurações / Preferências
+    function buildSettings() {
+        settingsBar.innerHTML = "";
+
+        // Botão de switch para Miniaturas (Hover vs Fixas)
+        const thumbBtn = document.createElement("button");
+        thumbBtn.className = "setting-btn";
+        updateThumbButtonText(thumbBtn);
+        thumbBtn.addEventListener("click", () => {
+            permanentThumbnails = !permanentThumbnails;
+            updateThumbButtonText(thumbBtn);
+            renderMapRegions();
+        });
+        settingsBar.appendChild(thumbBtn);
+
+        // Botão de switch para Níveis Recomendados no Mapa
+        const levelBtn = document.createElement("button");
+        levelBtn.className = "setting-btn";
+        updateLevelButtonText(levelBtn);
+        levelBtn.addEventListener("click", () => {
+            showLevelsOnMap = !showLevelsOnMap;
+            updateLevelButtonText(levelBtn);
+            renderMapRegions();
+        });
+        settingsBar.appendChild(levelBtn);
+    }
+
+    function updateThumbButtonText(btn) {
         if (permanentThumbnails) {
             btn.textContent = "🖼️ Miniaturas: Sempre Visíveis";
-            btn.style.background = "#1b4d3e";
-            btn.style.borderColor = "#00ffcc";
+            btn.classList.add("active");
         } else {
             btn.textContent = "🖼️ Miniaturas: Apenas no Mouse";
-            btn.style.background = "#2a1f1f";
-            btn.style.borderColor = "#662222";
+            btn.classList.remove("active");
         }
     }
 
-    function loadWorld(index) {
+    function updateLevelButtonText(btn) {
+        if (showLevelsOnMap) {
+            btn.textContent = "⭐ Níveis no Mapa: Visíveis";
+            btn.classList.add("active");
+        } else {
+            btn.textContent = "⭐ Níveis no Mapa: Ocultos";
+            btn.classList.remove("active");
+        }
+    }
+
+	function loadWorld(index) {
         const world = worldsData[index];
         if (!world) return;
         
+        // Limpa as marcações anteriores imediatamente ao trocar de continente
+        document.querySelectorAll(".map-region").forEach(el => el.remove());
+
         mapImage.src = `assets/images/${world.image}`;
         currentMapsList = world.maps || [];
 
@@ -147,7 +176,7 @@ document.addEventListener("DOMContentLoaded", function() {
             el.dataset.width = map.width > 0 ? map.width : (isDun ? 100 : 50);
             el.dataset.height = map.height > 0 ? map.height : (isDun ? 35 : 40);
 
-            // Inserção da miniatura permanente (funciona perfeitamente em dungeons e campos quando ativado)
+            // Inserção da miniatura permanente se ativada nas configurações
             if (permanentThumbnails && map.rsw && map.rsw !== "dungeon") {
                 const rswName = map.rsw.replace('.rsw', '');
                 const img = document.createElement("img");
@@ -157,6 +186,14 @@ document.addEventListener("DOMContentLoaded", function() {
                     this.style.display = "none";
                 };
                 el.appendChild(img);
+            }
+
+            // Inserção do selo de nível recomendado se ativado nas configurações
+            if (showLevelsOnMap && map.level) {
+                const levelBadge = document.createElement("div");
+                levelBadge.className = "map-level-badge";
+                levelBadge.textContent = map.level.includes("~") ? `Lv.${map.level}` : `Lv.${map.level}`;
+                el.appendChild(levelBadge);
             }
 
             el.addEventListener("mouseenter", () => {

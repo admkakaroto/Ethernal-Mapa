@@ -1,3 +1,9 @@
+-- Original translation works of zackdreaver: https://github.com/zackdreaver/ROenglishRE
+-- Continuated by llchrisll at https://github.com/llchrisll/ROenglishRE
+-- This file can be distributed, used and modified freely
+-- This file shouldn't be claimed as part of your project, unless you fork it from https://github.com/llchrisll/ROenglishRE
+-- Last updated: 20230321
+
 worldview_info = {
 	DungeonBox_ColorR = 255,
 	DungeonBox_ColorG = 0,
@@ -86,7 +92,6 @@ worldview_info = {
 	SelectBox_ColorB = 15,
 	SelectBox_Alpha = 70
 }
-
 function Get_Worldview_info_Dungeon()
 	return worldview_info.DungeonBox_ColorR, worldview_info.DungeonBox_ColorG, worldview_info.DungeonBox_ColorB, worldview_info.DungeonBox_Alpha
 end

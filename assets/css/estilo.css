@@ -15,21 +15,22 @@ body {
     padding: 20px; 
 }
 
-#nav-bar, #filter-bar {
-    margin-bottom: 12px;
+#nav-bar, #filter-bar, #settings-bar {
+    margin-bottom: 10px;
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     justify-content: center;
 }
 
-.world-btn {
+.world-btn, .filter-btn, .setting-btn {
     background: #1f232a;
     color: #ccc;
     border: 1px solid #444;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 13px;
     transition: all 0.2s;
 }
 
@@ -40,21 +41,26 @@ body {
     font-weight: bold;
 }
 
-.filter-btn {
-    background: #2a1f1f;
-    color: #ff9999;
-    border: 1px solid #662222;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: all 0.2s;
-}
-
 .filter-btn:hover, .filter-btn.active {
     background: #cc2222;
     color: #fff;
     border-color: #ff4444;
+    font-weight: bold;
+}
+
+/* Botões de configuração/preferências */
+.setting-btn {
+    background: #222730;
+    color: #aaa;
+    border: 1px solid #555;
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+.setting-btn.active {
+    background: #1b4d3e;
+    color: #00ffcc;
+    border-color: #00ffcc;
     font-weight: bold;
 }
 
@@ -74,21 +80,16 @@ body {
     width: 1280px;
 }
 
-/* Regiões posicionadas dinamicamente via JS (Responsivo) */
 .map-region {
     position: absolute;
     cursor: pointer;
+    overflow: hidden;
     transition: all 0.1s ease-in-out;
 }
 
-/* Estilo suave e padronizado para Campos e Cidades */
 .map-region.field {
-    position: absolute;
     border: 1px solid rgba(0, 255, 204, 0.5);
     background-color: rgba(0, 255, 204, 0.15);
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.1s ease-in-out;
 }
 
 .map-region.field:hover {
@@ -97,21 +98,50 @@ body {
     z-index: 10;
 }
 
-/* Estilo suave e padronizado para Dungeons (Mantém o tom avermelhado elegante) */
 .map-region.dungeon {
-    position: absolute;
     border: 1px solid rgba(231, 76, 60, 0.8);
     background-color: rgba(231, 76, 60, 0.25);
-    cursor: pointer;
-    overflow: hidden;
     z-index: 5;
-    transition: all 0.1s ease-in-out;
 }
 
 .map-region.dungeon:hover {
     border-color: #fff;
     background-color: rgba(255, 255, 255, 0.35);
     z-index: 20;
+}
+
+.map-region img.region-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+    opacity: 0.75;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.map-region:hover img.region-thumb {
+    opacity: 1;
+}
+
+/* Selo/Badge de nível recomendado no mapa */
+.map-level-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(15, 17, 21, 0.85);
+    color: #ffcc00;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 1px 3px;
+    border-radius: 2px;
+    z-index: 3;
+    pointer-events: none;
+    border: 1px solid rgba(255, 204, 0, 0.3);
+    white-space: nowrap;
 }
 
 #tooltip {
@@ -141,43 +171,78 @@ body {
 #tooltip .level { color: #ffcc00; font-size: 11px; }
 #tooltip .rsw { color: #aaa; font-size: 10px; font-style: italic; }
 
-/* Miniatura dentro da região do mapa */
-.map-region img.region-thumb {
-    position: absolute;
-    top: 0;
-    left: 0;
+/* --- Rodapé / Footer --- */
+#site-footer {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 2px;
-    opacity: 0.75;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
+    max-width: 1280px;
+    margin-top: 40px;
+    padding: 30px 20px;
+    background: #12151b;
+    border-top: 1px solid #222730;
+    border-radius: 6px;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.5);
 }
 
-.map-region:hover img.region-thumb {
-    opacity: 1;
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    color: #aaa;
+    font-size: 13px;
 }
 
-/* Rótulo para exibir o nome da dungeon de forma limpa na caixa */
-.dungeon-name-label {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(15, 17, 21, 0.85);
-    color: #ff9999;
-    font-size: 9px;
-    font-weight: bold;
-    padding: 2px 3px;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    z-index: 2;
+.footer-section h3 {
+    color: #00ffcc;
+    font-size: 16px;
+    margin-bottom: 10px;
 }
 
-/* Ajuste para dungeons quando a miniatura está visível */
-.map-region.dungeon img.region-thumb {
-    opacity: 0.85;
+.footer-section h4 {
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #00ffcc;
+    display: inline-block;
+    padding-bottom: 3px;
+}
+
+.footer-section p {
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 6px;
+}
+
+.footer-section ul li a {
+    color: #aaa;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-section ul li a:hover {
+    color: #00ffcc;
+}
+
+/* Indicador de Status Online */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #00ffcc;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00ffcc;
+    margin-right: 6px;
+}
+
+.copyright {
+    color: #666;
+    font-size: 11px;
+    margin-top: 10px;
 }
