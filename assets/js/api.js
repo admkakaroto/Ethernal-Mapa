@@ -12,12 +12,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let worldsData = [];
     let currentWorldIndex = 0;
-    let currentFilter = 'field'; 
+    let currentFilter = 'field'; // 'field' ou 'dungeon'
     let currentMapsList = [];
     
     // Estados das preferências do jogador
     let permanentThumbnails = false;
     let showLevelsOnMap = false;
+    let showTownsOnMap = true; // Habilitado por padrão como opção de overlay
 
     const townList = [
         "prontera", "morocc", "geffen", "payon", "alberta", "izlude", "aldebaran",
@@ -64,10 +65,10 @@ document.addEventListener("DOMContentLoaded", function() {
     function buildFilters() {
         filterBar.innerHTML = "";
         
+        // Filtros principais (Campos e Dungeons)
         const filters = [
             { id: 'field', label: '🏙️ Apenas Campos' },
-            { id: 'dungeon', label: '⚔️ Apenas Dungeons' },
-            { id: 'town', label: '🏰 Apenas Cidades' }
+            { id: 'dungeon', label: '⚔️ Apenas Dungeons' }
         ];
 
         filters.forEach(f => {
@@ -84,11 +85,11 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Painel de Configurações / Preferências
+    // Painel de Configurações / Preferências do Jogador
     function buildSettings() {
         settingsBar.innerHTML = "";
 
-        // Botão de switch para Miniaturas (Hover vs Fixas)
+        // Switch para Miniaturas (Hover vs Fixas)
         const thumbBtn = document.createElement("button");
         thumbBtn.className = "setting-btn";
         updateThumbButtonText(thumbBtn);
@@ -99,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         settingsBar.appendChild(thumbBtn);
 
-        // Botão de switch para Níveis Recomendados no Mapa
+        // Switch para Níveis Recomendados no Mapa
         const levelBtn = document.createElement("button");
         levelBtn.className = "setting-btn";
         updateLevelButtonText(levelBtn);
@@ -109,6 +110,17 @@ document.addEventListener("DOMContentLoaded", function() {
             renderMapRegions();
         });
         settingsBar.appendChild(levelBtn);
+
+        // Switch para Exibir/Ocultar Cidades
+        const townBtn = document.createElement("button");
+        townBtn.className = "setting-btn";
+        updateTownButtonText(townBtn);
+        townBtn.addEventListener("click", () => {
+            showTownsOnMap = !showTownsOnMap;
+            updateTownButtonText(townBtn);
+            renderMapRegions();
+        });
+        settingsBar.appendChild(townBtn);
     }
 
     function updateThumbButtonText(btn) {
@@ -131,11 +143,21 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-	function loadWorld(index) {
+    function updateTownButtonText(btn) {
+        if (showTownsOnMap) {
+            btn.textContent = "🏰 Cidades no Mapa: Visíveis";
+            btn.classList.add("active");
+        } else {
+            btn.textContent = "🏰 Cidades no Mapa: Ocultas";
+            btn.classList.remove("active");
+        }
+    }
+
+    function loadWorld(index) {
         const world = worldsData[index];
         if (!world) return;
         
-        // Limpa as marcações anteriores imediatamente ao trocar de continente
+        // Limpeza imediata de regiões anteriores para impedir sobreposição entre mundos
         document.querySelectorAll(".map-region").forEach(el => el.remove());
 
         mapImage.src = `assets/images/${world.image}`;
@@ -164,9 +186,13 @@ document.addEventListener("DOMContentLoaded", function() {
             const isTown = isTownMap(map);
             const isField = !isDun && !isTown;
 
-            if (currentFilter === 'field' && !isField) return;
-            if (currentFilter === 'dungeon' && !isDun) return;
-            if (currentFilter === 'town' && !isTown) return;
+            // Filtro dinâmico: Cidades aparecem se a opção 'showTownsOnMap' estiver ligada
+            if (isTown) {
+                if (!showTownsOnMap) return;
+            } else {
+                if (currentFilter === 'field' && !isField) return;
+                if (currentFilter === 'dungeon' && !isDun) return;
+            }
 
             const el = document.createElement("div");
             el.className = "map-region " + (isDun ? 'dungeon' : 'field');
@@ -176,7 +202,7 @@ document.addEventListener("DOMContentLoaded", function() {
             el.dataset.width = map.width > 0 ? map.width : (isDun ? 100 : 50);
             el.dataset.height = map.height > 0 ? map.height : (isDun ? 35 : 40);
 
-            // Inserção da miniatura permanente se ativada nas configurações
+            // Miniaturas fixas (se habilitado)
             if (permanentThumbnails && map.rsw && map.rsw !== "dungeon") {
                 const rswName = map.rsw.replace('.rsw', '');
                 const img = document.createElement("img");
@@ -188,7 +214,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 el.appendChild(img);
             }
 
-            // Inserção do selo de nível recomendado se ativado nas configurações
+            // Exibição de nível recomendado (se habilitado)
             if (showLevelsOnMap && map.level) {
                 const levelBadge = document.createElement("div");
                 levelBadge.className = "map-level-badge";
