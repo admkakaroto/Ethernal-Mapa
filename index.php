@@ -16,6 +16,7 @@
     <div id="map-container">
         <img id="map-image" src="" alt="Worldmap">
         <div id="tooltip">
+            <img id="tt-thumbnail" src="" alt="Miniatura" style="display: none;">
             <div class="title" id="tt-title">---</div>
             <div class="level" id="tt-level"></div>
             <div class="rsw" id="tt-rsw"></div>

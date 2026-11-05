@@ -4,13 +4,26 @@ document.addEventListener("DOMContentLoaded", function() {
     const navBar = document.getElementById("nav-bar");
     const filterBar = document.getElementById("filter-bar");
     const tooltip = document.getElementById("tooltip");
+    const ttThumbnail = document.getElementById("tt-thumbnail");
     const ttTitle = document.getElementById("tt-title");
     const ttLevel = document.getElementById("tt-level");
     const ttRsw = document.getElementById("tt-rsw");
 
     let worldsData = [];
     let currentWorldIndex = 0;
-    let currentFilter = 'all'; // 'all', 'field', 'dungeon'
+    let currentFilter = 'field'; 
+    let currentMapsList = [];
+    let permanentThumbnails = false;
+
+    // Lista oficial rigorosa de cidades do Ragnarok
+    const townList = [
+        "prontera", "morocc", "geffen", "payon", "alberta", "izlude", "aldebaran",
+        "xmas", "comodo", "yuno", "amatsu", "gonryun", "umbala", "niflheim",
+        "louyang", "start", "prison", "jawaii", "ayothaya", "einbroch",
+        "lighthalzen", "einbech", "hugel", "rachel", "veins", "moscovia",
+        "mid_camp", "manuk", "splendide", "brasilis", "dicastes01", "mora",
+        "dewata", "malangdo", "malaya", "eclage", "lasagna", "lutie"
+    ];
 
     fetch('json/worldmap_structured.json')
         .then(res => res.json())
@@ -23,6 +36,10 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         })
         .catch(err => console.error("Erro ao carregar o JSON:", err));
+
+    window.addEventListener("resize", () => {
+        updateRegionPositions();
+    });
 
     function buildNav() {
         navBar.innerHTML = "";
@@ -44,23 +61,48 @@ document.addEventListener("DOMContentLoaded", function() {
         filterBar.innerHTML = "";
         
         const filters = [
-            { id: 'all', label: '🗺️ Mostrar Tudo' },
-            { id: 'field', label: '🏙️ Apenas Campos / Cidades' },
-            { id: 'dungeon', label: '⚔️ Apenas Dungeons' }
+            { id: 'field', label: '🏙️ Apenas Campos' },
+            { id: 'dungeon', label: '⚔️ Apenas Dungeons' },
+            { id: 'town', label: '🏰 Apenas Cidades' }
         ];
 
         filters.forEach(f => {
             const btn = document.createElement("button");
-            btn.className = "filter-btn" + (f.id === 'all' ? " active" : "");
+            btn.className = "filter-btn" + (f.id === 'field' ? " active" : "");
             btn.textContent = f.label;
             btn.addEventListener("click", () => {
-                document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+                document.querySelectorAll(".filter-btn").forEach(b => {
+                    if(!b.classList.contains('toggle-thumb-btn')) b.classList.remove("active");
+                });
                 btn.classList.add("active");
                 currentFilter = f.id;
-                loadWorld(currentWorldIndex);
+                renderMapRegions();
             });
             filterBar.appendChild(btn);
         });
+
+        const toggleBtn = document.createElement("button");
+        toggleBtn.className = "filter-btn toggle-thumb-btn";
+        updateToggleButtonLabel(toggleBtn);
+        
+        toggleBtn.addEventListener("click", () => {
+            permanentThumbnails = !permanentThumbnails;
+            updateToggleButtonLabel(toggleBtn);
+            renderMapRegions();
+        });
+        filterBar.appendChild(toggleBtn);
+    }
+
+    function updateToggleButtonLabel(btn) {
+        if (permanentThumbnails) {
+            btn.textContent = "🖼️ Miniaturas: Sempre Visíveis";
+            btn.style.background = "#1b4d3e";
+            btn.style.borderColor = "#00ffcc";
+        } else {
+            btn.textContent = "🖼️ Miniaturas: Apenas no Mouse";
+            btn.style.background = "#2a1f1f";
+            btn.style.borderColor = "#662222";
+        }
     }
 
     function loadWorld(index) {
@@ -68,52 +110,107 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!world) return;
         
         mapImage.src = `assets/images/${world.image}`;
+        currentMapsList = world.maps || [];
 
-        // Limpar caixas anteriores
+        mapImage.onload = () => {
+            renderMapRegions();
+        };
+        if (mapImage.complete) {
+            renderMapRegions();
+        }
+    }
+
+    function isTownMap(map) {
+        if (!map.rsw) return false;
+        const cleanName = map.rsw.toLowerCase().replace('.rsw', '');
+        return townList.includes(cleanName) && !cleanName.includes('fild') && !cleanName.includes('dun');
+    }
+
+    function renderMapRegions() {
         document.querySelectorAll(".map-region").forEach(el => el.remove());
 
-        if (world.maps && Array.isArray(world.maps)) {
-            world.maps.forEach(map => {
-                // Aplicar filtro de exibição
-                if (currentFilter !== 'all' && map.type !== currentFilter) {
-                    return;
-                }
+        currentMapsList.forEach(map => {
+            const rswLower = (map.rsw || '').toLowerCase();
+            const isDun = map.type === 'dungeon' || rswLower.includes('dun');
+            const isTown = isTownMap(map);
+            const isField = !isDun && !isTown;
 
-                const el = document.createElement("div");
-                el.className = "map-region " + (map.type || 'field');
-                
-                el.style.left = map.x1 + "px";
-                el.style.top = map.y1 + "px";
+            if (currentFilter === 'field' && !isField) return;
+            if (currentFilter === 'dungeon' && !isDun) return;
+            if (currentFilter === 'town' && !isTown) return;
 
-                // Se for dungeon, exibimos o nome diretamente na placa vermelha (estilo jogo)
-                if (map.type === 'dungeon') {
-                    el.style.width = (map.width > 0 ? map.width : 120) + "px";
-                    el.style.height = (map.height > 0 ? map.height : 26) + "px";
-                    el.textContent = map.name; // Mostra o nome na placa vermelha
+            const el = document.createElement("div");
+            el.className = "map-region " + (isDun ? 'dungeon' : 'field');
+            
+            el.dataset.x1 = map.x1;
+            el.dataset.y1 = map.y1;
+            el.dataset.width = map.width > 0 ? map.width : (isDun ? 100 : 50);
+            el.dataset.height = map.height > 0 ? map.height : (isDun ? 35 : 40);
+
+            // Inserção da miniatura permanente (funciona perfeitamente em dungeons e campos quando ativado)
+            if (permanentThumbnails && map.rsw && map.rsw !== "dungeon") {
+                const rswName = map.rsw.replace('.rsw', '');
+                const img = document.createElement("img");
+                img.className = "region-thumb";
+                img.src = `assets/images/mapas/${rswName}.png`;
+                img.onerror = function() {
+                    this.style.display = "none";
+                };
+                el.appendChild(img);
+            }
+
+            el.addEventListener("mouseenter", () => {
+                ttTitle.textContent = map.name;
+                ttLevel.textContent = map.level ? `Nível Recomendado: ${map.level}` : "Zona Segura / Cidade";
+                ttRsw.textContent = isDun ? 'Tipo: Dungeon' : `Arquivo: ${map.rsw}`;
+
+                if (!permanentThumbnails && map.rsw && map.rsw !== "dungeon") {
+                    const rswName = map.rsw.replace('.rsw', '');
+                    ttThumbnail.src = `assets/images/mapas/${rswName}.png`;
+                    ttThumbnail.style.display = "block";
+                    ttThumbnail.onerror = function() {
+                        ttThumbnail.style.display = "none";
+                    };
                 } else {
-                    el.style.width = map.width + "px";
-                    el.style.height = map.height + "px";
+                    ttThumbnail.style.display = "none";
                 }
 
-                el.addEventListener("mouseenter", () => {
-                    ttTitle.textContent = map.name;
-                    ttLevel.textContent = map.level ? `Nível Recomendado: ${map.level}` : "Zona Segura / Cidade";
-                    ttRsw.textContent = map.type === 'dungeon' ? 'Tipo: Dungeon' : `Arquivo: ${map.rsw}`;
-                    tooltip.style.display = "block";
-                });
-
-                el.addEventListener("mousemove", (e) => {
-                    const rect = container.getBoundingClientRect();
-                    tooltip.style.left = (e.clientX - rect.left + 15) + "px";
-                    tooltip.style.top = (e.clientY - rect.top + 15) + "px";
-                });
-
-                el.addEventListener("mouseleave", () => {
-                    tooltip.style.display = "none";
-                });
-
-                container.appendChild(el);
+                tooltip.style.display = "block";
             });
-        }
+
+            el.addEventListener("mousemove", (e) => {
+                const rect = container.getBoundingClientRect();
+                tooltip.style.left = (e.clientX - rect.left + 15) + "px";
+                tooltip.style.top = (e.clientY - rect.top + 15) + "px";
+            });
+
+            el.addEventListener("mouseleave", () => {
+                tooltip.style.display = "none";
+            });
+
+            container.appendChild(el);
+        });
+
+        updateRegionPositions();
+    }
+
+    function updateRegionPositions() {
+        const baseWidth = 1280;
+        const currentWidth = mapImage.clientWidth;
+        if (!currentWidth) return;
+
+        const scale = currentWidth / baseWidth;
+
+        document.querySelectorAll(".map-region").forEach(el => {
+            const x1 = parseFloat(el.dataset.x1);
+            const y1 = parseFloat(el.dataset.y1);
+            const w = parseFloat(el.dataset.width);
+            const h = parseFloat(el.dataset.height);
+
+            el.style.left = (x1 * scale) + "px";
+            el.style.top = (y1 * scale) + "px";
+            el.style.width = (w * scale) + "px";
+            el.style.height = (h * scale) + "px";
+        });
     }
 });

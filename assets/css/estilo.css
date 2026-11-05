@@ -15,113 +15,6 @@ body {
     padding: 20px; 
 }
 
-#nav-bar {
-    margin-bottom: 15px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.world-btn {
-    background: #1f232a;
-    color: #ccc;
-    border: 1px solid #444;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.world-btn:hover, .world-btn.active {
-    background: #00ffcc;
-    color: #000;
-    border-color: #00ffcc;
-    font-weight: bold;
-}
-
-#map-container {
-    position: relative;
-    display: inline-block;
-    border: 2px solid #333;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
-    background: #000;
-}
-
-#map-image {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    width: 1280px;
-}
-
-/* Estilo das caixas dos mapas para ficarem bem visíveis */
-.map-region {
-    position: absolute;
-    border: 1px solid rgba(0, 255, 204, 0.6);
-    background-color: rgba(0, 255, 204, 0.15);
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
-}
-
-.map-region.dungeon {
-    border: 1px solid rgba(255, 50, 50, 0.8);
-    background-color: rgba(255, 0, 0, 0.25);
-}
-
-.map-region:hover {
-    border-color: #fff;
-    background-color: rgba(255, 255, 255, 0.35);
-    z-index: 10;
-}
-
-#tooltip {
-    position: absolute;
-    display: none;
-    padding: 8px 12px;
-    background: rgba(15, 15, 20, 0.95);
-    border: 1px solid #00ffcc;
-    border-radius: 4px;
-    font-size: 12px;
-    pointer-events: none;
-    z-index: 100;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
-
-#tooltip .title { 
-    font-weight: bold; 
-    color: #00ffcc; 
-    margin-bottom: 2px; 
-}
-
-#tooltip .level { 
-    color: #ffcc00; 
-    font-size: 11px; 
-}
-
-#tooltip .rsw { 
-    color: #aaa; 
-    font-size: 10px; 
-    font-style: italic; 
-}
-
-* { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
-}
-
-body { 
-    background-color: #0f1115; 
-    color: #fff; 
-    font-family: Arial, sans-serif; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    min-height: 100vh; 
-    padding: 20px; 
-}
-
 #nav-bar, #filter-bar {
     margin-bottom: 12px;
     display: flex;
@@ -147,7 +40,6 @@ body {
     font-weight: bold;
 }
 
-/* Estilo para os switches de filtro de Dungeons / Fields */
 .filter-btn {
     background: #2a1f1f;
     color: #ff9999;
@@ -172,6 +64,7 @@ body {
     border: 2px solid #333;
     box-shadow: 0 0 20px rgba(0,0,0,0.8);
     background: #000;
+    max-width: 100%;
 }
 
 #map-image {
@@ -181,45 +74,43 @@ body {
     width: 1280px;
 }
 
-/* Campos e Cidades (Grade original) */
+/* Regiões posicionadas dinamicamente via JS (Responsivo) */
+.map-region {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+}
+
+/* Estilo suave e padronizado para Campos e Cidades */
 .map-region.field {
     position: absolute;
     border: 1px solid rgba(0, 255, 204, 0.5);
-    background-color: rgba(0, 255, 204, 0.1);
+    background-color: rgba(0, 255, 204, 0.15);
     cursor: pointer;
+    overflow: hidden;
     transition: all 0.1s ease-in-out;
 }
 
 .map-region.field:hover {
     border-color: #fff;
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.35);
     z-index: 10;
 }
 
-/* Estilo clássico das Dungeons (Placas vermelhas do Ragnarok) */
+/* Estilo suave e padronizado para Dungeons (Mantém o tom avermelhado elegante) */
 .map-region.dungeon {
     position: absolute;
-    background-color: #a82020;
-    border: 1px solid #e74c3c;
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 2px 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.7);
+    border: 1px solid rgba(231, 76, 60, 0.8);
+    background-color: rgba(231, 76, 60, 0.25);
     cursor: pointer;
+    overflow: hidden;
     z-index: 5;
-    white-space: nowrap;
-    transition: transform 0.1s;
+    transition: all 0.1s ease-in-out;
 }
 
 .map-region.dungeon:hover {
-    background-color: #c0392b;
     border-color: #fff;
-    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.35);
     z-index: 20;
 }
 
@@ -234,8 +125,59 @@ body {
     pointer-events: none;
     z-index: 100;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    max-width: 220px;
+}
+
+#tt-thumbnail {
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    border: 1px solid #444;
 }
 
 #tooltip .title { font-weight: bold; color: #00ffcc; margin-bottom: 2px; }
 #tooltip .level { color: #ffcc00; font-size: 11px; }
 #tooltip .rsw { color: #aaa; font-size: 10px; font-style: italic; }
+
+/* Miniatura dentro da região do mapa */
+.map-region img.region-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+    opacity: 0.75;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.map-region:hover img.region-thumb {
+    opacity: 1;
+}
+
+/* Rótulo para exibir o nome da dungeon de forma limpa na caixa */
+.dungeon-name-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(15, 17, 21, 0.85);
+    color: #ff9999;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 2px 3px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 2;
+}
+
+/* Ajuste para dungeons quando a miniatura está visível */
+.map-region.dungeon img.region-thumb {
+    opacity: 0.85;
+}
